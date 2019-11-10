@@ -1,0 +1,14 @@
+C Moez Kilani, 2016
+
+C this file contains block parameters in the model 
+
+      COMMON /DIST/  DRSC,DRCE,DRSE,DTSC,DTCE,DTSE
+      COMMON /SPEED/ SRSC,SRCE,SRSE,STSC,STCE,STSE
+      COMMON /FCOST/ FSCT,FCET,FSET,FSCR,FCER,FSER
+C     COMMON /PRFARES/ PSC,PCE,PSE,TAUSC,TAUCE,TAUSE
+C     COMMON /FREQ/ FSC,FCE,FSE,AA,BB
+      COMMON /POP/  POPSC,POPCE,POPSE
+      COMMON /EXTCOST/ ASCT,ACET,ASET,ASCR,ACER,ASER 
+      COMMON /OTHER/ CW,PHI,SC,GAMA,EF,VAL,THETA
+C B is the coefficient in the effort function b aa^2
+      

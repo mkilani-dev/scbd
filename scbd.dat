@@ -1,0 +1,74 @@
+# ------------------------
+
+# PRICES
+#on roads
+psc=0.0
+pce=0.0
+pse=0.0
+#in public transit
+beta=1.0
+tausc=2.0
+tauce=2.0
+tause=4.0
+
+#TIME VALUE
+# theta= pi / 2
+theta=0.57079653589793
+val=10.0
+
+#(* DISTANCES *)
+dRsc=5.0
+dRce=5.0
+#dRse=6.0
+dTsc=5.0
+dTce=5.0
+#dTse=8.0 
+
+#(* TRAVEL SPEED *)
+#on road
+sRsc=30.0
+sRce=30.0
+sRse=40.0
+#in public transit
+sTsc=15.0
+sTce=15.0
+sTse=20.0
+
+#(* FREQUENCIES *)
+fsc=6.0
+fce=6.0 
+fse=6.0
+
+#(* NUMBER OF COMMUTERS FOR EACH O/D PAIR *)
+Nsc=100.0
+Nce=100.0
+Nse=100.0
+
+#(* EXTERNAL COST *)
+
+#in public transit (crowding)
+asct=0.05
+acet=0.05
+aset=0.05
+
+#in cars (congestion, excluding time value) 
+ascr=0.02
+acer=0.02
+aser=0.02
+
+#(* OTHER PARAMETER *)
+#waiting cost
+cw=1.5
+#Public transit operating cost (used as a scale parameter for frequencies)
+phi=22.5
+#
+alpha=0.10
+#Switching cost
+sc=0.5
+#
+gama=0.0
+#
+ef=5.0
+
+
+
