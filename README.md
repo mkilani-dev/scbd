@@ -7,8 +7,8 @@ This package is provided as a companion to the papers
 
 The package is composed of two executables :
 
-- scbd    : fixed frequencies
-- f_scbd  : endogenous frequencies
+- **scbd**    : fixed frequencies
+- **f_scbd**  : endogenous frequencies
 
 The optimization step relies on the packages BOBYQA
 and COBYLA written by Pr. Powell (the double precision 
@@ -22,7 +22,7 @@ The EQUILIBRIUM subroutine is central since it is the
 one where the network equilibrium is computed.
 
 
-## INSTALLATION 
+## Installation 
 
 0. For a unix-like system (for Windows
    the process should be similar)
@@ -43,7 +43,7 @@ one where the network equilibrium is computed.
    to file.
 
 
-## REMARK
+## Remark
 
 For some parameter values the obtained output may not 
 be optimal because the trust region search is 
