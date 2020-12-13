@@ -2,8 +2,8 @@
 
 This package is provided as a companion to the papers
 
-  Transport policies in polycentric cities, by
-  Q. David et M. Kilani, 2019.
+___Transport policies in polycentric cities, by
+  Q. David and M. Kilani, 2019.___
 
 The package is composed of two executables :
 
@@ -14,9 +14,9 @@ The optimization step relies on the packages BOBYQA
 and COBYLA written by Pr. Powell (the double precision 
 versions are used).
 
-The file "scbd.dat" is read for model parameters.
+The file **scbd.dat** is read for model parameters.
 
-The source code is located in the "src" subdirectory.
+The source code is located in the **src** subdirectory.
 The subroutines are separated into several files.
 The EQUILIBRIUM subroutine is central since it is the 
 one where the network equilibrium is computed.
