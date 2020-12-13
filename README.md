@@ -30,15 +30,17 @@ one where the network equilibrium is computed.
    is installed.  
 
 1. Clone this directory 
+```
     git clone https://gogs.univ-littoral.fr/mkilani/scbd
+```
 
 2. Type "make" (gfortran should be installed)
-   "scbd" and "f_scbd" executables are produced
+   **scbd** and **f_scbd** executables are produced
 
 4. Edit "scbd.dat" file and save
 
-5. Type "./scbd" 
-   The output is written to the screen.
+5. The command **./scbd** can then be used and
+   the output is written to the screen.
    Standard redirection can be used to save output
    to file.
 
@@ -48,7 +50,7 @@ one where the network equilibrium is computed.
 For some parameter values the obtained output may not 
 be optimal because the trust region search is 
 not convenient. In case of doubt, it is preferable to
-change the values of parameters "RHOBEG" and "RHOEND" 
+change the values of parameters **RHOBEG** and **RHOEND**
 and check for robustness. Too small values may miss the
 exploration of the optimal region and values that are 
 too large are likely to yield instability and non 
