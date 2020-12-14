@@ -31,6 +31,8 @@ one where the network equilibrium is computed.
     git clone https://gogs.univ-littoral.fr/mkilani/scbd
 ```
 
+2. Check **makefile** (edit compiler name if not **gfortran**)
+
 2. Type "make" (gfortran should be installed)
    **scbd** and **f_scbd** executables are produced
 
