@@ -24,10 +24,7 @@ one where the network equilibrium is computed.
 
 ## Installation 
 
-0. For a unix-like system (for Windows
-   the process should be similar)
-   We assume that gfortran (or an equivalent)
-   is installed.  
+0. Install **gfortran** (or another Fortran compiler)  
 
 1. Clone this directory 
 ```
@@ -37,7 +34,7 @@ one where the network equilibrium is computed.
 2. Type "make" (gfortran should be installed)
    **scbd** and **f_scbd** executables are produced
 
-4. Edit "scbd.dat" file and save
+4. Edit **scbd.dat** file and save
 
 5. The command **./scbd** can then be used and
    the output is written to the screen.
