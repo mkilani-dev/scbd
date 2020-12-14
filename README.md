@@ -33,10 +33,10 @@ one where the network equilibrium is computed.
 
 2. Check **makefile** (edit compiler name if not **gfortran**)
 
-2. Type "make" (gfortran should be installed)
+2. Type **make**;
    **scbd** and **f_scbd** executables are produced
 
-4. Edit **scbd.dat** file and save
+4. Edit parameter values in **scbd.dat** file and save
 
 5. The command **./scbd** can then be used and
    the output is written to the screen.
