@@ -1,5 +1,8 @@
       PROGRAM SCBD
       IMPLICIT REAL*8 (A-H,O-Z)
+      INTEGER IT,ITMAX
+      DOUBLE PRECISION DEMAND, QUADERR
+      DOUBLE PRECISION MUSC, MUCE, MUSE, POPSC0, POPCE0, POPSE0, EPS
       COMMON /PB/ NPROB
 
       INCLUDE "param.inc"
@@ -10,7 +13,10 @@
     
       ZERO=0.0D0
       ONE=1.0D0
-      TWO=2.0D0
+      TWO=2.0D0 
+
+      EPS = 1.0D-5
+      ITMAX = 100
 
       CALL  PARAM("scbd.dat",PSC,PCE,PSE,BB,TAUSC,TAUCE,TAUSE,
      1  FSC,FCE,FSE,AA) 
@@ -21,6 +27,14 @@
       ACER = VAL * ACER
       ASER = VAL * ASER
 
+
+      POPSC0 = POPSC
+      POPCE0 = POPCE
+      POPSE0 = POPSE
+
+      MUSC = 0.01D0
+      MUCE = 0.01D0
+      MUSE = 0.01D0 
 
       DO 1, I=1,90
       LINE0(I)='-'
@@ -84,16 +98,13 @@ C  1 -- COMPUTE THE OPTIMUM
 C  ------------------------
 
       ID=1
+
+      IT = 0
+
+ 305  CONTINUE
+
       CALL OPTIMUM (TC,USCT,UCET,USET,FSC,FCE,FSE,AA,
-     1              PSC,PCE,BB,TAUSC,TAUCE,TAUSE,ID)
-
-      WRITE (*, '(A12,35X,F8.4)' ) 'Optimum', TC
-      POPTRAIN = USCT+UCET+USET
-      POPCAR = POP-POPTRAIN
-      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
-     &   USCT,UCET,USET,POPTRAIN,
-     &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
-
+     1              PSC,PCE,BB,TAUSC,TAUCE,TAUSE,ID) 
       C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
       C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
       C3T=C1T+C2T-AA*CW/(TWO*FSC)+(ONE-AA)*SC
@@ -103,13 +114,39 @@ C  ------------------------
       C3R=FSER+ASER*(POPSE-USET)
       CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
      &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T)
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 305
+
+      WRITE (*, '(A12,35X,F8.4)' ) 'Optimum', TC
+      POPTRAIN = USCT+UCET+USET
+      POPCAR = POP-POPTRAIN
+      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
+     &   USCT,UCET,USET,POPTRAIN,
+     &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
+
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
      &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
       WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB*(PSC+PCE),
      &     PSC*USCT+PCE*UCET+PSE*USET
       WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,
      &  (POPSC-USCT)*TAUSC+(POPCE-UCET)*TAUCE+(POPSE-USET)*TAUSE
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT
       PRINT '(90A)', LINE0
+
+C Reset population
+      POPSC = POPSC0
+      POPCE = POPCE0
+      POPSE = POPSE0 
 
 C  ------------------------
 C  2 -- BETA LIMITED: BETA <= BETA_MAX
@@ -153,14 +190,14 @@ CC  2 -- UNPRICED EQUILIBRIUM
 CC  -------------------------
 
       ID = 2
+
+      IT = 0
+ 300  CONTINUE 
+C     PRINT*, "-->", IT, POPSC, POPCE, POPSE, ERR
       CALL EQUILIBRIUM (TC,USCT,UCET,USET,FSC,FCE,FSE,AA,
      1     ZERO,ZERO,ZERO,ZERO,ZERO,ZERO,ID) 
       POPTRAIN = USCT+UCET+USET
       POPCAR = POP-POPTRAIN
-      WRITE (*, '(A12,35X,F8.4)' ) 'Unpriced', TC
-      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
-     &   USCT,UCET,USET,POPTRAIN,
-     &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
 
       C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
       C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
@@ -171,9 +208,32 @@ CC  -------------------------
       C3R=FSER+ASER*(POPSE-USET)
       CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
      &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T)
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 300
+
+      WRITE (*, '(A12,35X,F8.4)' ) 'Unpriced', TC
+      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
+     &   USCT,UCET,USET,POPTRAIN,
+     &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Costs', 
      &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT
       PRINT '(90A)', LINE0
+
+C Reset population
+      POPSC = POPSC0
+      POPCE = POPCE0
+      POPSE = POPSE0 
 
 CC  -----------------------
 CC  2 -- PRICED EQUILIBRIUM
@@ -194,15 +254,64 @@ CC  -----------------------
 CC  2 -- ROAD PROFIT
 CC  -----------------------
 
+      IT = 0
+
+ 310  CONTINUE 
+
       CALL PRFROAD (PRFR,TC,USCT,UCET,USET,FSC,FCE,AA,
      1     ZERO,ZERO,ZERO,TAUSC,TAUCE,TAUSE) 
 C     WRITE (*,'(8F9.4)') TC, USCT,UCET,USET,PRFR,TAUSC,TAUCE,TAUSE 
+
+      C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
+      C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
+      C3T=C1T+C2T-AA*CW/(TWO*FSC)+(ONE-AA)*SC
+      CT =(USCT*C1T+UCET*C2T+USET*C3T)/(USCT+UCET+USET)
+      C1R=FSCR+ASCR*(POPSC-USCT)
+      C2R=FCER+ACER*(POPCE-UCET)
+      C3R=FSER+ASER*(POPSE-USET)
+      CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
+     &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
+
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T)
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 310
+
       WRITE (*, '(A12,35X,F8.4)' ) 'Road prf', TC
       POPTRAIN = USCT+UCET+USET
       POPCAR = POP-POPTRAIN
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
      &   USCT,UCET,USET,POPTRAIN,
      &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
+      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
+     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
+      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,PRFR
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT
+      PRINT '(90A)', LINE0
+
+C Reset population
+      POPSC = POPSC0
+      POPCE = POPCE0
+      POPSE = POPSE0 
+
+CC  --------------------
+CC  2 -- TRAIN PROFIT
+CC  --------------------
+
+      IT = 0
+
+ 320  CONTINUE 
+
+      CALL PRFTRAIN (PRFT,TC,USCT,UCET,USET,FSC,FCE,AA,
+     1     PSC,PCE,BB,ZERO,ZERO,ZERO) 
 
       C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
       C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
@@ -213,37 +322,37 @@ C     WRITE (*,'(8F9.4)') TC, USCT,UCET,USET,PRFR,TAUSC,TAUCE,TAUSE
       C3R=FSER+ASER*(POPSE-USET)
       CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
      &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
-      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
-     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
-      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,PRFR
-      PRINT '(90A)', LINE0
 
-CC  --------------------
-CC  2 -- TRAIN PROFIT
-CC  --------------------
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T + PSC)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T + PCE)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T + PSC + PCE )
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 320 
 
-      CALL PRFTRAIN (PRFT,TC,USCT,UCET,USET,FSC,FCE,AA,
-     1     PSC,PCE,BB,ZERO,ZERO,ZERO) 
       WRITE (*, '(A12,35X,F8.4)' ) 'Train prf', TC
       POPTRAIN = USCT+UCET+USET
       POPCAR = POP-POPTRAIN
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
      &   USCT,UCET,USET,POPTRAIN,
      &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
-
-      C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
-      C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
-      C3T=C1T+C2T-AA*CW/(TWO*FSC)+(ONE-AA)*SC
-      CT =(USCT*C1T+UCET*C2T+USET*C3T)/(USCT+UCET+USET)
-      C1R=FSCR+ASCR*(POPSC-USCT)
-      C2R=FCER+ACER*(POPCE-UCET)
-      C3R=FSER+ASER*(POPSE-USET)
-      CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
-     &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
      &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
       WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB*(PSC+PCE),PRFT
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT
       PRINT '(90A)', LINE0 
+
+C Reset population
+      POPSC = POPSC0
+      POPCE = POPCE0
+      POPSE = POPSE0 
+
 
 CC  --------------------
 CC  2 -- SEMI-PUBLIC
@@ -251,14 +360,64 @@ CC  --------------------
       PSC = ZERO
       PCE = ZERO
       PSE = ZERO
+
+      IT = 0
+ 330  CONTINUE
+
       CALL SEMIPUBLIC (PRFT,PRFR,TC,USCT,UCET,USET,FSC,FCE,AA,
      1                 PSC,PCE,BB,TAUSC,TAUCE,TAUSE)
+
+      C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
+      C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
+      C3T=C1T+C2T-AA*CW/(TWO*FSC)+(ONE-AA)*SC
+      CT =(USCT*C1T+UCET*C2T+USET*C3T)/(USCT+UCET+USET)
+      C1R=FSCR+ASCR*(POPSC-USCT)
+      C2R=FCER+ACER*(POPCE-UCET)
+      C3R=FSER+ASER*(POPSE-USET)
+      CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
+     &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
+
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T+PSC)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T+PCE)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T+PSC+PCE)
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 330
+
       WRITE (*, '(A12,35X,F8.4)' ) 'Semi-pub', TC
       POPTRAIN = USCT+UCET+USET
       POPCAR = POP-POPTRAIN
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
      &   USCT,UCET,USET,POPTRAIN,
      &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
+      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
+     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
+      WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB*(PSC+PCE),PRFT
+      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,PRFR
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT
+      PRINT '(90A)', LINE0
+
+C Reset population
+      POPSC = POPSC0
+      POPCE = POPCE0
+      POPSE = POPSE0 
+
+CC  --------------------
+CC  2 -- DUOPOLY
+CC  --------------------
+
+      IT = 0
+
+ 340  CONTINUE
+
+      CALL DUOPOLY (PRFT,PRFR,TC,USCT,UCET,USET,FSC,FCE,AA,
+     1              PSC,PCE,BB,TAUSC,TAUCE,TAUSE)
 
       C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
       C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
@@ -269,50 +428,77 @@ CC  --------------------
       C3R=FSER+ASER*(POPSE-USET)
       CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
      &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
-      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
-     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
-      WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB*(PSC+PCE),PRFT
-      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,PRFR
-      PRINT '(90A)', LINE0
 
-CC  --------------------
-CC  2 -- DUOPOLY
-CC  --------------------
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T+PSC)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T+PCE)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T+PSC+PCE)
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 340 
 
-      CALL DUOPOLY (PRFT,PRFR,TC,USCT,UCET,USET,FSC,FCE,AA,
-     1              PSC,PCE,BB,TAUSC,TAUCE,TAUSE)
       WRITE (*, '(A12,35X,F8.4)' ) 'Duopoly', TC
       POPTRAIN = USCT+UCET+USET
       POPCAR = POP-POPTRAIN
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Users', 
      &   USCT,UCET,USET,POPTRAIN,
      &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
+      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
+     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
+      WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB*(PSC+PCE),PRFT
+      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,PRFR
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT 
+      PRINT '(90A)', LINE3 
 
-      C1T=FSCT+CW/(TWO*FSC)+ASCT*(USCT+USET)/FSC
-      C2T=FCET+CW/(TWO*FCE)+ACET*(UCET+USET)/FCE 
-      C3T=C1T+C2T-AA*CW/(TWO*FSC)+(ONE-AA)*SC
+      WRITE (*, '(16X,4A8,5X,4A8)') 'SC','CE','SE','AGR', 
+     &                              'SC','CE','SE','AGR' 
+      PRINT '(90A)', LINE0
+
+C Reset population
+      POPSC = POPSC0
+      POPCE = POPCE0
+      POPSE = POPSE0 
+
+C  ---------------------------------------------
+C  1 -- COMPUTE THE OPTIMUM WITH DIRECT TRAIN SE
+C  ---------------------------------------------
+
+      ID=10
+
+      IT = 0
+
+ 400  CONTINUE
+
+      CALL OPTIMUM (TC,USCT,UCET,USET,FSC,FCE,FSE,AA,
+     1              PSC,PCE,BB,TAUSC,TAUCE,TAUSE,ID)
+
+      C1T=FSCT+CW/(TWO*FSC)+ASCT*USCT/FSC
+      C2T=FCET+CW/(TWO*FCE)+ACET*UCET/FCE 
+      C3T=FSET+CW/(TWO*FSE)+ASET*USET/FCE 
       CT =(USCT*C1T+UCET*C2T+USET*C3T)/(USCT+UCET+USET)
       C1R=FSCR+ASCR*(POPSC-USCT)
       C2R=FCER+ACER*(POPCE-UCET)
       C3R=FSER+ASER*(POPSE-USET)
       CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
      &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
-      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
-     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
-      WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB*(PSC+PCE),PRFT
-      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,PRFR
 
-      PRINT '(90A)', LINE3 
-      WRITE (*, '(16X,4A8,5X,4A8)') 'SC','CE','SE','AGR', 
-     &                              'SC','CE','SE','AGR' 
-      PRINT '(90A)', LINE0
-C  ---------------------------------------------
-C  1 -- COMPUTE THE OPTIMUM WITH DIRECT TRAIN SE
-C  ---------------------------------------------
-
-      ID=10
-      CALL OPTIMUM (TC,USCT,UCET,USET,FSC,FCE,FSE,AA,
-     1              PSC,PCE,BB,TAUSC,TAUCE,TAUSE,ID)
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T)
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 400
 
       WRITE (*, '(A12,35X,F8.4)' ) 'Optimum', TC
       POPTRAIN = USCT+UCET+USET
@@ -321,6 +507,32 @@ C  ---------------------------------------------
      &   USCT,UCET,USET,POPTRAIN,
      &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
 
+      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Costs', 
+     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
+      WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB,
+     &     PSC*USCT+PCE*UCET+PSE*USET
+      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,
+     &  (POPSC-USCT)*TAUSC+(POPCE-UCET)*TAUCE+(POPSE-USET)*TAUSE
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT
+      PRINT '(90A)', LINE0
+
+C Reset population
+      POPSC = POPSC0
+      POPCE = POPCE0
+      POPSE = POPSE0 
+
+CC  ----------------------------------------------
+CC  2 -- UNPRICED EQUILIBRIUM WITH DIRECT TRAIN SE
+CC  ----------------------------------------------
+
+      ID = 11
+
+      IT = 0
+
+ 410  CONTINUE 
+      CALL EQUILIBRIUM (TC,USCT,UCET,USET,FSC,FCE,FSE,AA,
+     1     ZERO,ZERO,ZERO,ZERO,ZERO,ZERO,ID) 
+
       C1T=FSCT+CW/(TWO*FSC)+ASCT*USCT/FSC
       C2T=FCET+CW/(TWO*FCE)+ACET*UCET/FCE 
       C3T=FSET+CW/(TWO*FSE)+ASET*USET/FCE 
@@ -330,21 +542,20 @@ C  ---------------------------------------------
       C3R=FSER+ASER*(POPSE-USET)
       CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
      &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
-      WRITE (*, '(11X,A5,4F8.2,5X,4F8.2)')  'Costs', 
-     &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
-      WRITE (*, '(11X,A5,4F8.2)') 'Fares',PSC,PCE,BB,
-     &     PSC*USCT+PCE*UCET+PSE*USET
-      WRITE (*, '(11X,A5,37X,4F8.2)') 'Tolls',TAUSC,TAUCE,TAUSE,
-     &  (POPSC-USCT)*TAUSC+(POPCE-UCET)*TAUCE+(POPSE-USET)*TAUSE
-      PRINT '(90A)', LINE0
+      POPSCOLD = POPSC
+      POPCEOLD = POPCE
+      POPSEOLD = POPSE
+      POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T)
+      POPCE = DEMAND(POPCE0, MUCE , FCET, C2T)
+      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T)
+      ERR = ZERO
+      ERR = ERR + QUADERR(POPSC,POPSCOLD)
+      ERR = ERR + QUADERR(POPCE,POPCEOLD)
+      ERR = ERR + QUADERR(POPSE,POPSEOLD)
+      IT = IT + 1
+      IF(IT.LE.ITMAX.AND.ERR.GT.EPS) GOTO 410
 
-CC  ----------------------------------------------
-CC  2 -- UNPRICED EQUILIBRIUM WITH DIRECT TRAIN SE
-CC  ----------------------------------------------
 
-      ID = 11
-      CALL EQUILIBRIUM (TC,USCT,UCET,USET,FSC,FCE,FSE,AA,
-     1     ZERO,ZERO,ZERO,ZERO,ZERO,ZERO,ID) 
       WRITE (*, '(A12,35X,F8.4)' ) 'Unpriced', TC
       POPTRAIN = USCT+UCET+USET
       POPCAR = POP-POPTRAIN
@@ -352,25 +563,35 @@ CC  ----------------------------------------------
      &   USCT,UCET,USET,POPTRAIN,
      &   POPSC-USCT,POPCE-UCET,POPSE-USET,POPCAR 
 
-      C1T=FSCT+CW/(TWO*FSC)+ASCT*USCT/FSC
-      C2T=FCET+CW/(TWO*FCE)+ACET*UCET/FCE 
-      C3T=FSET+CW/(TWO*FSE)+ASET*USET/FCE 
-      CT =(USCT*C1T+UCET*C2T+USET*C3T)/(USCT+UCET+USET)
-      C1R=FSCR+ASCR*(POPSC-USCT)
-      C2R=FCER+ACER*(POPCE-UCET)
-      C3R=FSER+ASER*(POPSE-USET)
-      CR =((POPSC-USCT)*C1R+(POPCE-UCET)*C2R+(POPSE-USET)*C3R)/
-     &    (POPSC+POPCE+POPSE-USCT-UCET-USET) 
       WRITE (*, '(11X,A5,4F8.2,5X,4F8.2,5X)')  'Costs', 
      &   C1T,C2T,C3T,CT,C1R,C2R,C3R,CR
+      PRINT*, 'Populations --> ', POPSC, POPCE, POPSE, IT
       PRINT '(90A)', LINE1
 
+C Reset population (No need at the end of the program)
+C     POPSC = POPSC0
+C     POPCE = POPCE0
+C     POPSE = POPSE0 
 
       END
 
 
+      FUNCTION DEMAND(POP, MU, C0, C)
+      IMPLICIT NONE
+      DOUBLE PRECISION DEMAND, POP, MU, C0, C 
+
+      DEMAND = POP ** ( 1.0D0 - MU * ( C/C0 - 1.0D0) )
+
+      RETURN
+      END
 
 
+      FUNCTION QUADERR(X1, X2)
+      IMPLICIT NONE
+      DOUBLE PRECISION QUADERR, X1, X2
 
+      QUADERR = DSQRT( (X1-X2) ** 2 )
 
+      RETURN
+      END
 
