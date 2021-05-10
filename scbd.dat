@@ -40,9 +40,9 @@ fce=6.0
 fse=6.0
 
 #(* NUMBER OF COMMUTERS FOR EACH O/D PAIR *)
-Nsc=100.0
-Nce=100.0
-Nse=100.0
+Nsc=110.465
+Nce=110.465
+Nse=118.155
 
 #(* EXTERNAL COST *)
 

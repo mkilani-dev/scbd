@@ -32,9 +32,9 @@
       POPCE0 = POPCE
       POPSE0 = POPSE
 
-      MUSC = 0.01D0
-      MUCE = 0.01D0
-      MUSE = 0.01D0 
+      MUSC = 0.20D0
+      MUCE = 0.20D0
+      MUSE = 0.20D0 
 
       DO 1, I=1,90
       LINE0(I)='-'
@@ -492,7 +492,7 @@ C  ---------------------------------------------
       POPSEOLD = POPSE
       POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T)
       POPCE = DEMAND(POPCE0, MUCE , FCET, C2T)
-      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T)
+      POPSE = DEMAND(POPSE0, MUSE , FSET, C3T)
       ERR = ZERO
       ERR = ERR + QUADERR(POPSC,POPSCOLD)
       ERR = ERR + QUADERR(POPCE,POPCEOLD)
@@ -547,7 +547,7 @@ CC  ----------------------------------------------
       POPSEOLD = POPSE
       POPSC = DEMAND(POPSC0, MUSC , FSCT, C1T)
       POPCE = DEMAND(POPCE0, MUCE , FCET, C2T)
-      POPSE = DEMAND(POPSE0, MUSE , FSCT+FCET, C3T)
+      POPSE = DEMAND(POPSE0, MUSE , FSET, C3T)
       ERR = ZERO
       ERR = ERR + QUADERR(POPSC,POPSCOLD)
       ERR = ERR + QUADERR(POPCE,POPCEOLD)
@@ -580,7 +580,8 @@ C     POPSE = POPSE0
       IMPLICIT NONE
       DOUBLE PRECISION DEMAND, POP, MU, C0, C 
 
-      DEMAND = POP ** ( 1.0D0 - MU * ( C/C0 - 1.0D0) )
+C     DEMAND = POP ** ( 1.0D0 - MU * ( C/C0 - 1.0D0) )
+      DEMAND = POP * ( C/C0 ) ** ( - MU )
 
       RETURN
       END
