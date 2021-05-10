@@ -32,10 +32,6 @@
       POPCE0 = POPCE
       POPSE0 = POPSE
 
-      MUSC = 0.20D0
-      MUCE = 0.20D0
-      MUSE = 0.20D0 
-
       DO 1, I=1,90
       LINE0(I)='-'
       LINE1(I)='='
