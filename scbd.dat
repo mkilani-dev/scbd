@@ -44,6 +44,11 @@ Nsc=110.465
 Nce=110.465
 Nse=118.155
 
+# (* Elasticités des demandes *)
+MUsc=0.2
+MUce=0.2
+MUse=0.2
+
 #(* EXTERNAL COST *)
 
 #in public transit (crowding)

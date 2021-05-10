@@ -76,6 +76,12 @@ C     double precision var,varvalue
         POPCE=varvalue
       elseif(varname.eq."Nse") then
         POPSE=varvalue
+      elseif(varname.eq."MUsc") then
+        MUSC=varvalue
+      elseif(varname.eq."MUce") then
+        MUCE=varvalue
+      elseif(varname.eq."MUse") then
+        MUSE=varvalue
       elseif(varname.eq."asct") then
         asct=varvalue
       elseif(varname.eq."acet") then

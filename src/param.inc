@@ -8,6 +8,7 @@ C this file contains block parameters in the model
 C     COMMON /PRFARES/ PSC,PCE,PSE,TAUSC,TAUCE,TAUSE
 C     COMMON /FREQ/ FSC,FCE,FSE,AA,BB
       COMMON /POP/  POPSC,POPCE,POPSE
+      COMMON /ELAS/ MUSC, MUCE, MUSE
       COMMON /EXTCOST/ ASCT,ACET,ASET,ASCR,ACER,ASER 
       COMMON /OTHER/ CW,PHI,SC,GAMA,EF,VAL,THETA
 C B is the coefficient in the effort function b aa^2
