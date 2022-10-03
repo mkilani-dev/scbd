@@ -3,7 +3,8 @@
 This package is provided as a companion to the papers
 
 ___Transport policies in polycentric cities, by
-  Q. David and M. Kilani, 2019.___
+  Q. David and M. Kilani, Transportation Research Part A: 
+  Policy and Practice 2022.___
 
 The package is composed of two executables :
 
@@ -28,7 +29,7 @@ one where the network equilibrium is computed.
 
 1. Clone this directory 
 ```
-    git clone https://gogs.univ-littoral.fr/mkilani/scbd
+    git clone https://github.com/mkilani-dev/scbd
 ```
 
 2. Check **makefile** (edit compiler name if not **gfortran**)
